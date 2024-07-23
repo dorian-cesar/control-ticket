@@ -1,8 +1,7 @@
 <?php
 class Ticket {
     private $conn;
-    private $table_name = "tickets";
-    private $log_table_name = "ticket_logs";
+    private $table_name = "tickets3";
 
     public $id;
     public $area;
@@ -28,7 +27,6 @@ class Ticket {
 
         if ($stmt->execute()) {
             $this->id = $this->conn->lastInsertId();
-            $this->logEstado();
             return true;
         }
         return false;
@@ -41,39 +39,28 @@ class Ticket {
         return $stmt;
     }
 
-    function update() {
-        $query = "UPDATE " . $this->table_name . " SET estado = :estado WHERE id = :id";
+    function update($solucion = null) {
+        $query = "INSERT INTO ticket_historial3 SET ticket_id=:ticket_id, estado=:estado, solucion=:solucion";
         $stmt = $this->conn->prepare($query);
-
         $this->estado = htmlspecialchars(strip_tags($this->estado));
         $this->id = htmlspecialchars(strip_tags($this->id));
+        $solucion = htmlspecialchars(strip_tags($solucion));
 
+        $stmt->bindParam(':ticket_id', $this->id);
         $stmt->bindParam(':estado', $this->estado);
-        $stmt->bindParam(':id', $this->id);
+        $stmt->bindParam(':solucion', $solucion);
 
         if ($stmt->execute()) {
-            $this->logEstado();
-            return true;
+            $update_query = "UPDATE " . $this->table_name . " SET estado = :estado WHERE id = :id";
+            $update_stmt = $this->conn->prepare($update_query);
+            $update_stmt->bindParam(':estado', $this->estado);
+            $update_stmt->bindParam(':id', $this->id);
+
+            if ($update_stmt->execute()) {
+                return true;
+            }
         }
         return false;
-    }
-
-    function logEstado() {
-        $query = "INSERT INTO " . $this->log_table_name . " SET ticket_id=:ticket_id, estado=:estado";
-        $stmt = $this->conn->prepare($query);
-
-        $stmt->bindParam(":ticket_id", $this->id);
-        $stmt->bindParam(":estado", $this->estado);
-
-        $stmt->execute();
-    }
-
-    function readLogs() {
-        $query = "SELECT estado, fecha FROM " . $this->log_table_name . " WHERE ticket_id = :ticket_id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':ticket_id', $this->id);
-        $stmt->execute();
-        return $stmt;
     }
 }
 ?>

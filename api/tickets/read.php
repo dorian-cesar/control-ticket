@@ -24,6 +24,11 @@ if($num > 0){
             "estado" => $estado,
             "fecha_creacion" => $fecha_creacion
         );
+        $historial_stmt = $db->prepare("SELECT estado, fecha_cambio, solucion FROM ticket_historial3 WHERE ticket_id = :ticket_id ORDER BY fecha_cambio DESC");
+        $historial_stmt->bindParam(':ticket_id', $id);
+        $historial_stmt->execute();
+        $historial = $historial_stmt->fetchAll(PDO::FETCH_ASSOC);
+        $ticket_item['historial'] = $historial;
         array_push($tickets_arr, $ticket_item);
     }
     echo json_encode($tickets_arr);

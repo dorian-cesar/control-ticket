@@ -17,8 +17,9 @@ $data = json_decode(file_get_contents("php://input"));
 if(!empty($data->id) && !empty($data->estado)){
     $ticket->id = $data->id;
     $ticket->estado = $data->estado;
+    $solucion = !empty($data->solucion) ? $data->solucion : null;
 
-    if($ticket->update()){
+    if($ticket->update($solucion)){
         http_response_code(200);
         echo json_encode(array("message" => "Ticket actualizado."));
     } else {
